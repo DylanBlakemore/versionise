@@ -1,7 +1,7 @@
 defmodule Versionise.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "1.0.0"
   @source_url "https://github.com/dylanblakemore/versionise"
 
   def project do
@@ -83,7 +83,7 @@ defmodule Versionise.MixProject do
   defp docs do
     [
       main: "readme",
-      source_ref: "v#{@version}",
+      source_ref: "v1.0.0",
       source_url: @source_url,
       extras: ["README.md", "CHANGELOG.md"],
       authors: ["Dylan Blakemore"]
