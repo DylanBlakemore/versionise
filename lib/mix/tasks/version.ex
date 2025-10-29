@@ -17,7 +17,15 @@ defmodule Mix.Tasks.Version do
   4. Running tests (optional)
   5. Creating git commit and tag (optional)
   6. Pushing to remote (optional)
-  7. Creating GitHub release (optional)
+
+  ## Configuration
+
+  You can customize the test command in your `config/config.exs`:
+
+      config :versionise,
+        test_command: "mix precommit"
+
+  The default test command is `mix test`.
   """
 
   use Mix.Task
@@ -105,12 +113,18 @@ defmodule Mix.Tasks.Version do
   @spec maybe_run_tests() :: :ok | {:error, String.t()}
   defp maybe_run_tests do
     Prompter.section("Running Tests")
+    test_command = get_test_command()
 
-    if Prompter.confirm("Run test suite (mix precommit)?") do
-      run_tests()
+    if Prompter.confirm("Run test suite (#{test_command})?") do
+      run_tests(test_command)
     else
       skip_tests()
     end
+  end
+
+  @spec get_test_command() :: String.t()
+  defp get_test_command do
+    Application.get_env(:versionise, :test_command, "mix test")
   end
 
   @spec skip_tests() :: :ok
@@ -119,12 +133,25 @@ defmodule Mix.Tasks.Version do
     :ok
   end
 
-  @spec run_tests() :: :ok | {:error, String.t()}
-  defp run_tests do
-    Prompter.info("Running mix precommit...")
+  @spec run_tests(String.t()) :: :ok | {:error, String.t()}
+  defp run_tests(test_command) do
+    Prompter.info("Running #{test_command}...")
 
-    System.cmd("mix", ["precommit"], into: IO.stream(:stdio, :line))
+    test_command
+    |> parse_command()
+    |> execute_command()
     |> handle_test_result()
+  end
+
+  @spec parse_command(String.t()) :: {String.t(), [String.t()]}
+  defp parse_command(command) do
+    [cmd | args] = String.split(command)
+    {cmd, args}
+  end
+
+  @spec execute_command({String.t(), [String.t()]}) :: {Collectable.t(), non_neg_integer()}
+  defp execute_command({cmd, args}) do
+    System.cmd(cmd, args, into: IO.stream(:stdio, :line))
   end
 
   @spec handle_test_result({Collectable.t(), non_neg_integer()}) ::

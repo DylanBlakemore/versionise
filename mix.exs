@@ -1,16 +1,24 @@
 defmodule Versionise.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @source_url "https://github.com/dylanblakemore/versionise"
+
   def project do
     [
       app: :versionise,
-      version: "1.0.1",
-      elixir: "~> 1.18",
+      version: @version,
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      deps: deps(),
       aliases: aliases(),
-      dialyzer: dialyzer()
+      dialyzer: dialyzer(),
+      description: description(),
+      package: package(),
+      docs: docs(),
+      name: "Versionise",
+      source_url: @source_url,
+      homepage_url: @source_url
     ]
   end
 
@@ -48,6 +56,37 @@ defmodule Versionise.MixProject do
       plt_add_apps: [:mix, :ex_unit],
       flags: [:error_handling, :underspecs],
       ignore_warnings: ".dialyzer_ignore.exs"
+    ]
+  end
+
+  defp description do
+    """
+    Interactive versioning and release automation for Elixir packages.
+    Guides you through version bumps, changelog management, git operations,
+    and publishing with interactive prompts.
+    """
+  end
+
+  defp package do
+    [
+      name: "versionise",
+      files: ~w(lib .formatter.exs mix.exs README.md LICENSE CHANGELOG.md),
+      maintainers: ["Dylan Blakemore"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => @source_url,
+        "Changelog" => "#{@source_url}/blob/main/CHANGELOG.md"
+      }
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      extras: ["README.md", "CHANGELOG.md"],
+      authors: ["Dylan Blakemore"]
     ]
   end
 end

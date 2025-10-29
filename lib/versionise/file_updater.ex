@@ -27,8 +27,18 @@ defmodule Versionise.FileUpdater do
   @spec update_version_in_content(String.t(), String.t()) :: String.t()
   defp update_version_in_content(content, new_version) do
     content
+    |> update_module_attribute_version(new_version)
     |> update_project_version(new_version)
     |> update_source_ref(new_version)
+  end
+
+  @spec update_module_attribute_version(String.t(), String.t()) :: String.t()
+  defp update_module_attribute_version(content, new_version) do
+    Regex.replace(
+      ~r/@version\s+"[^"]+"/,
+      content,
+      "@version \"#{new_version}\""
+    )
   end
 
   @spec update_project_version(String.t(), String.t()) :: String.t()
@@ -77,9 +87,12 @@ defmodule Versionise.FileUpdater do
 
   @spec extract_version(String.t()) :: {:ok, String.t()} | {:error, String.t()}
   defp extract_version(content) do
-    ~r/version:\s*"([^"]+)"/
-    |> Regex.run(content, capture: :all_but_first)
-    |> handle_version_match()
+    # Try to find @version module attribute first
+    module_attr_version = Regex.run(~r/@version\s+"([^"]+)"/, content, capture: :all_but_first)
+    # Fall back to version: in project list
+    project_version = Regex.run(~r/version:\s*"([^"]+)"/, content, capture: :all_but_first)
+
+    handle_version_match(module_attr_version || project_version)
   end
 
   @spec handle_version_match([String.t()] | nil) :: {:ok, String.t()} | {:error, String.t()}

@@ -16,7 +16,8 @@ defmodule Versionise.FileUpdaterTest do
   describe "read_current_version/0" do
     test "reads version from actual mix.exs" do
       # This test runs in the actual project, so it reads the real mix.exs
-      assert {:ok, %Version{}} = FileUpdater.read_current_version()
+      # The FileUpdater now supports both @version module attributes and inline versions
+      assert {:ok, %Version{major: 0, minor: 1, patch: 0}} = FileUpdater.read_current_version()
     end
   end
 
