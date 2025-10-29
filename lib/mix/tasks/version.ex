@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Version do
 
   use Mix.Task
 
-  alias Versionise.{Changelog, FileUpdater, Git, GitHub, Prompter, Version}
+  alias Versionise.{Changelog, FileUpdater, Git, Prompter, Version}
 
   @impl Mix.Task
   def run(args) do
@@ -56,8 +56,7 @@ defmodule Mix.Tasks.Version do
          changelog_entries <- collect_changelog(),
          :ok <- Changelog.update_file(new_version, changelog_entries),
          :ok <- maybe_run_tests(),
-         :ok <- maybe_git_operations(new_version),
-         :ok <- maybe_github_release(new_version, changelog_entries) do
+         :ok <- maybe_git_operations(new_version) do
       show_completion_message()
     else
       {:error, reason} -> handle_error(reason)
@@ -232,62 +231,6 @@ defmodule Mix.Tasks.Version do
       Prompter.success("Pushed to origin")
       :ok
     end
-  end
-
-  @spec maybe_github_release(Version.t(), Changelog.changelog_entries()) ::
-          :ok | {:error, String.t()}
-  defp maybe_github_release(version, changelog_entries) do
-    Prompter.section("GitHub Release")
-
-    if GitHub.cli_available?() do
-      prompt_github_release(version, changelog_entries)
-    else
-      skip_github_release()
-    end
-  end
-
-  @spec skip_github_release() :: :ok
-  defp skip_github_release do
-    Prompter.info("GitHub CLI (gh) not installed, skipping GitHub release")
-    Prompter.info("Install gh from https://cli.github.com/")
-    :ok
-  end
-
-  @spec prompt_github_release(Version.t(), Changelog.changelog_entries()) ::
-          :ok | {:error, String.t()}
-  defp prompt_github_release(version, changelog_entries) do
-    if Prompter.confirm("Create GitHub release?") do
-      create_github_release(version, changelog_entries)
-    else
-      skip_github_release_creation()
-    end
-  end
-
-  @spec skip_github_release_creation() :: :ok
-  defp skip_github_release_creation do
-    Prompter.info("Skipping GitHub release")
-    :ok
-  end
-
-  @spec create_github_release(Version.t(), Changelog.changelog_entries()) :: :ok
-  defp create_github_release(version, changelog_entries) do
-    Prompter.info("Creating GitHub release...")
-
-    version
-    |> GitHub.create_release(changelog_entries)
-    |> handle_github_result()
-  end
-
-  @spec handle_github_result(:ok | {:error, String.t()}) :: :ok
-  defp handle_github_result(:ok) do
-    Prompter.success("GitHub release created!")
-    :ok
-  end
-
-  defp handle_github_result({:error, reason}) do
-    Prompter.error("Failed to create GitHub release: #{reason}")
-    Prompter.info("You can create it manually later")
-    :ok
   end
 
   @spec show_completion_message() :: :ok
